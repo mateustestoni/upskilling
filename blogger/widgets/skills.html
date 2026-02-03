@@ -1,0 +1,253 @@
+<div id="upskilling-skills"></div>
+
+<audio id="levelup-sound">
+  <source src="https://static.wikia.nocookie.net/soundeffects/images/0/08/MK64_DK_Sound_%28Ver._2%29.ogg">
+</source></audio>
+
+<style>
+  .skill-row {
+    margin-bottom: 14px;
+  }
+
+  .skill-header {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .skill-bar {
+    width: 100%;
+    height: 8px;
+    background: #222;
+    border: 1px solid #000;
+    overflow: hidden;
+  }
+
+  .skill-progress {
+    height: 100%;
+    background: #3aa655;
+    width: 0%;
+    transition: width 0.6s ease;
+  }
+
+  .skill-details {
+    display: none;
+    margin-top: 6px;
+  }
+
+  .skill-details input,
+  .skill-details button {
+    width: 90%;
+    margin-top: 6px;
+    padding: 6px;
+    background: #111;
+    border: 1px solid #333;
+    color: #fff;
+  }
+
+  .skill-details button {
+    background: #00ff88;
+    color: #000;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .skill-percent {
+    font-size: 12px;
+    color: #aaa;
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .level-up {
+    animation: flash 0.8s ease;
+  }
+
+  @keyframes flash {
+    0% { background: rgba(0,255,0,0.0); }
+    50% { background: rgba(0,255,0,0.25); }
+    100% { background: rgba(0,255,0,0.0); }
+  }
+
+  .levelup-text {
+    color: #00ff88;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 4px;
+    animation: pop 1s ease forwards;
+  }
+
+  @keyframes pop {
+    0% { opacity: 0; transform: scale(0.8); }
+    30% { opacity: 1; transform: scale(1.1); }
+    100% { opacity: 0; transform: scale(1); }
+  }
+
+.xp-feedback {
+  font-size: 12px;
+  color: #00ff88;
+  margin-top: 4px;
+  text-align: center;
+  animation: pop 0.8s ease;
+}
+</style>
+
+<script>
+  var API_URL = "https://script.google.com/macros/s/AKfycbyX6BbTw_E_ucZwzj7JSEoGJ83DPJnEvulfebHGI7JHmlvG-hgLwqhQMJM8N7c5rF3Z/exec";
+
+  var SKILLS = [];
+  var XP_BY_SKILL = {};
+
+  function loadSkills() {
+    Promise.all([
+      fetch(API_URL + "?action=getSkills").then(r => r.json()),
+      fetch(API_URL + "?action=getLogs").then(r => r.json())
+    ]).then(([skills, logs]) => {
+      SKILLS = skills;
+      XP_BY_SKILL = {};
+
+      logs.forEach(l => {
+        XP_BY_SKILL[l.skill_id] = (XP_BY_SKILL[l.skill_id] || 0) + Number(l.points);
+      });
+
+      renderSkills();
+    });
+  }
+
+  function renderSkills() {
+    var c = document.getElementById("upskilling-skills");
+    c.innerHTML = "";
+
+    SKILLS.forEach(skill => {
+      var totalXP = XP_BY_SKILL[skill.id] || 0;
+      var result = calc(totalXP);
+
+      c.innerHTML += `
+        <div class="skill-row" id="skill-${skill.id}">
+          <div class="skill-header" onclick="toggle(${skill.id})">
+            <span>${skill.name}</span>
+            <span>Lv ${result.level}</span>
+          </div>
+
+          <div class="skill-bar">
+            <div class="skill-progress" id="bar-${skill.id}" style="width:${result.progress}%"></div>
+          </div>
+
+          <div class="skill-details" id="details-${skill.id}">
+            <div class="skill-percent" id="percent-${skill.id}">
+              ${result.progress.toFixed(2)}% 
+            </div>
+
+            <input type="text" id="xp-${skill.id}" placeholder="XP (ex: 30min, 2h, 15reais)">
+            <button onclick="addXP(event, ${skill.id})">Adicionar XP</button>
+            <div id="feedback-${skill.id}"></div>
+<div id="levelup-${skill.id}"></div>
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function toggle(id) {
+    var el = document.getElementById("details-" + id);
+    el.style.display = el.style.display === "block" ? "none" : "block";
+  }
+
+function parseXPInput(value) {
+  if (!value) return 0;
+
+  value = value.toString().toLowerCase().replace(/\s+/g, "");
+
+  var number = parseFloat(value);
+  if (isNaN(number)) return 0;
+
+  if (value.endsWith("min")) return number * 60;
+  if (value.endsWith("h")) return number * 3600;
+  if (value.endsWith("reais")) return number * 100;
+
+  return number; // padrão
+}
+
+  function addXP(event, id) {
+    event.stopPropagation();
+
+    var input = document.getElementById("xp-" + id);
+    var xp = parseXPInput(input.value);
+if (!xp || xp <= 0) {
+  alert("Valor de XP inválido");
+  return;
+}
+
+    var before = calc(XP_BY_SKILL[id] || 0);
+
+    XP_BY_SKILL[id] = (XP_BY_SKILL[id] || 0) + xp;
+
+    var after = calc(XP_BY_SKILL[id]);
+
+    updateUI(id, before, after);
+var feedback = document.getElementById("feedback-" + id);
+feedback.innerHTML = `<div class="xp-feedback">+${xp} XP adicionados</div>`;
+
+setTimeout(() => {
+  feedback.innerHTML = "";
+}, 2000);
+
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "addXP",
+        skill_id: id,
+        points: xp,
+        source: "manual"
+      })
+    });
+
+    input.value = "";
+  }
+
+  function updateUI(id, before, after) {
+    document.querySelector(`#skill-${id} .skill-header span:last-child`)
+      .innerText = "Lv " + after.level;
+
+    var bar = document.getElementById("bar-" + id);
+    bar.style.width = after.progress + "%";
+
+    document.getElementById("percent-" + id)
+      .innerText = after.progress.toFixed(2) + "%";
+
+    if (after.level > before.level) {
+      document.getElementById("levelup-sound").play();
+
+      var row = document.getElementById("skill-" + id);
+      row.classList.add("level-up");
+
+      var text = document.getElementById("levelup-" + id);
+      text.innerHTML = '<div class="levelup-text">LEVEL UP!</div>';
+
+      setTimeout(() => {
+        row.classList.remove("level-up");
+        text.innerHTML = "";
+      }, 1000);
+    }
+  }
+
+  function calc(totalXP) {
+    var level = 0;
+    var remaining = totalXP;
+
+    while (remaining >= Math.pow(2, level)) {
+      remaining -= Math.pow(2, level);
+      level++;
+    }
+
+    var next = Math.pow(2, level);
+    var progress = next ? (remaining / next) * 100 : 0;
+
+    return { level, progress: Math.min(progress, 100) };
+  }
+
+  loadSkills();
+</script>
