@@ -1,0 +1,143 @@
+<div class="character-box">
+  <div class="character-photo">
+    <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgvxZmyM2UtlHV5keENI_B1t-V2OZi1evYTVaF8tcOpcn8vUTxz85kJU8EED5ambo7c9PuUkCV7ucnG42DuYXNJ0uzZFiSQ61ya6RwgQPE3m1nBjsmdSKobCNd7PuD1cEw8XVFrAI4OtiGRPFoasyuwlTy4_CTho9GkUJ4kTafZyDwgvtf2nJlYVXQi6vg/s1024/WhatsApp%20Image%202026-02-02%20at%2012.09.54.jpeg" alt="Character Photo"/>
+  </div>
+
+  <div class="character-info">
+    <div class="character-name">MATEUS CANAVEZ TESTONI</div>
+    <div class="character-subtitle">Upskilling Journey</div>
+  </div>
+</div>
+
+<style>
+  .character-box {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .character-photo img {
+    width: 120px;
+    height: 120px;
+    object-fit: cover;
+    border: 2px solid #3aa655;
+    background: #000;
+  }
+
+  .character-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .character-name {
+    font-size: 16px;
+    font-weight: bold;
+    color: #9adf9a;
+  }
+
+  .character-subtitle {
+    font-size: 12px;
+    color: #aaa;
+  }
+</style>
+
+<script type="text/javascript">
+  console.log("[Upskilling] Dashboard carregado");
+</script>
+
+<div class="level-box">
+  <div class="level-header">
+    <span class="level-title"></span>
+    <span class="level-number" id="levelAge">Lv 0</span>
+  </div>
+
+  <div class="level-bar-bg">
+    <div class="level-bar-fill" id="levelBar"></div>
+  </div>
+
+  <div class="level-xp" id="levelXp">0 / 0 XP</div>
+
+  <div class="character-stats">
+    <div><b>Peso:</b> <span id="peso"></span> kg</div>
+    <div><b>Altura:</b> <span id="altura"></span> m</div>
+  </div>
+</div>
+
+<style>
+  .level-box {
+  }
+
+  .level-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    color: #f1f1f1;
+    font-weight: bold;
+  }
+
+  .level-title {
+    color: #ff6b6b;
+  }
+
+  .level-bar-bg {
+    width: 100%;
+    height: 14px;
+    background: #000;
+    border: 1px solid #333;
+  }
+
+  .level-bar-fill {
+    height: 100%;
+    width: 0%;
+    background: #c0392b;
+  }
+
+  .level-xp {
+    font-size: 12px;
+    margin-top: 4px;
+    color: #aaa;
+    text-align: right;
+  }
+
+  .character-stats {
+    margin-top: 8px;
+    font-size: 12px;
+    color: #ccc;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+
+<script type="text/javascript">
+  /* ===== CONFIGURAÇÕES DO PERSONAGEM ===== */
+  var birthDate = new Date("1994-07-19"); // ANO-MES-DIA
+  var pesoKg = 105;   // PESO
+  var alturaM = 1.85; // ALTURA
+  /* ====================================== */
+
+  var today = new Date();
+
+  var age = today.getFullYear() - birthDate.getFullYear();
+  var birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+
+  if (today < birthdayThisYear) {
+    age--;
+    birthdayThisYear.setFullYear(today.getFullYear() - 1);
+  }
+
+  var nextBirthday = new Date(birthdayThisYear);
+  nextBirthday.setFullYear(birthdayThisYear.getFullYear() + 1);
+
+  var xpCurrent = Math.floor((today - birthdayThisYear) / (1000 * 60 * 60 * 24));
+  var xpTotal = Math.floor((nextBirthday - birthdayThisYear) / (1000 * 60 * 60 * 24));
+
+  var progress = Math.min((xpCurrent / xpTotal) * 100, 100);
+
+  document.getElementById("levelAge").innerText = "Lv " + age;
+  document.getElementById("levelXp").innerText = xpCurrent + " / " + xpTotal + " XP";
+  document.getElementById("levelBar").style.width = progress + "%";
+  document.getElementById("peso").innerText = pesoKg;
+  document.getElementById("altura").innerText = alturaM;
+
+  console.log("[Upskilling] Level Geral carregado");
+</script>
