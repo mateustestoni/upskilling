@@ -1,0 +1,104 @@
+<div id="upskilling-quests"></div>
+
+<style>
+  .quest-row {
+    margin-bottom: 10px;
+    font-size: 14px;
+  }
+
+  .quest-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .quest-name {
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .quest-desc {
+    display: none;
+    font-size: 12px;
+    color: #ccc;
+    margin-left: 22px;
+    margin-top: 4px;
+  }
+</style>
+
+<script>
+  var API_URL = "https://script.google.com/macros/s/AKfycbyX6BbTw_E_ucZwzj7JSEoGJ83DPJnEvulfebHGI7JHmlvG-hgLwqhQMJM8N7c5rF3Z/exec";
+
+  function loadQuests() {
+    fetch(API_URL + "?action=getQuests")
+      .then(r => r.json())
+      .then(quests => {
+        console.log("[Quests] Raw:", quests);
+
+        if (!Array.isArray(quests)) {
+          console.error("[Quests] Não é array:", quests);
+          quests = [];
+        }
+
+        const activeQuests = quests.filter(q => !q.done);
+        renderQuests(activeQuests);
+      })
+      .catch(err => {
+        console.error("[Quests] Erro ao carregar:", err);
+      });
+  }
+
+  function renderQuests(quests) {
+    var container = document.getElementById("upskilling-quests");
+    container.innerHTML = "";
+
+    quests.forEach(q => {
+      container.innerHTML += `
+        <div class="quest-row" id="quest-${q.id}">
+          <div class="quest-header">
+            <input type="checkbox" onclick="completeQuest(event, ${q.id})">
+            <span class="quest-name" onclick="toggleQuest(${q.id})">
+              ${q.name}
+            </span>
+          </div>
+          <div class="quest-desc" id="desc-${q.id}">
+            ${q.description}
+          </div>
+        </div>
+      `;
+    });
+  }
+
+  function toggleQuest(id) {
+    var el = document.getElementById("desc-" + id);
+    if (!el) return;
+
+    el.style.display = el.style.display === "block" ? "none" : "block";
+  }
+
+  function completeQuest(event, questId) {
+    event.stopPropagation();
+
+    fetch(API_URL, {
+      method: "POST",
+      body: JSON.stringify({
+        action: "completeQuest",
+        quest_id: questId
+      })
+    })
+    .then(r => r.json())
+    .then(res => {
+      if (res.success) {
+        const el = document.getElementById("quest-" + questId);
+        if (el) el.remove();
+      } else {
+        alert("Erro ao completar quest");
+      }
+    })
+    .catch(err => {
+      console.error("[Quests] Erro ao completar:", err);
+    });
+  }
+
+  loadQuests();
+</script>
